@@ -1,0 +1,55 @@
+name: Banking CI Main
+
+on:
+  push:
+    branches: [ '**', '!master' ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Spin Database Container
+      run: docker run -d --rm -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mariadb:10.3 --lower_case_table_names=1
+    
+    - name: Set up JDK 1.11
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.11
+    
+    - name: Cache Maven Dependecies
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-  
+    
+    - name: Build with Maven
+      run: mvn clean verify
+      env:
+        GCP_MYSQL_DB_HOST: 0.0.0.0
+        GCP_MYSQL_DB_PORT: 3306
+        GCP_MYSQL_DB_UNAME: root
+        GCP_MYSQL_DB_PASSWD: root
+    
+    - name: Extract branch name
+      shell: bash
+      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/} | tr / -)"
+      id: extract_branch
+
+    - name: Build and Push Retail Banking Application to DockerHub
+      uses: docker/build-push-action@v1.1.0
+      with:
+        username: ${{ secrets.DOCKERHUB_UNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWD }}
+        registry: docker.io
+        repository: subhrodip/retail-banking
+        tags: dev-${{ steps.extract_branch.outputs.branch }}
+        labels: pipeline_build=true,cloud_build=true
+        always_pull: true
+        push: true

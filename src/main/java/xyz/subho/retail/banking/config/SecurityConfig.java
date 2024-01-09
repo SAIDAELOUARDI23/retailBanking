@@ -3,6 +3,7 @@ package xyz.subho.retail.banking.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -45,10 +46,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	protected void configure(HttpSecurity http) throws Exception {
 
 		http.authorizeRequests()
-				// .antMatchers("/**")
-				.antMatchers(PUBLIC_MATCHERS).permitAll().anyRequest().authenticated();
+        .antMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow OPTIONS requests
+        .antMatchers(PUBLIC_MATCHERS).permitAll().anyRequest().authenticated();
 
-		http.csrf().disable().cors().disable().formLogin().failureUrl("/index?error").defaultSuccessUrl("/userFront")
+		http.csrf().disable().formLogin().failureUrl("/index?error").defaultSuccessUrl("/userFront")
 				.loginPage("/index").permitAll().and().logout()
 				.logoutRequestMatcher(new AntPathRequestMatcher("/logout")).logoutSuccessUrl("/index?logout")
 				.deleteCookies("remember-me").permitAll().and().rememberMe();

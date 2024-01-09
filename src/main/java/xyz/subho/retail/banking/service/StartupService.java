@@ -14,12 +14,17 @@ public class StartupService {
 
     @PostConstruct
     public void init() {
+        // if (roleDao.findByName("ROLE_ADMIN") == null) {
+        //     Role adminRole = new Role();
+        //     adminRole.setName("ROLE_ADMIN");
+        //     adminRole.setRoleId(0);
+        //     roleDao.save(adminRole);
+        // }
         if (roleDao.findByName("ROLE_USER") == null) {
             Role userRole = new Role();
             userRole.setName("ROLE_USER");
             roleDao.save(userRole);
         }
-
-        // Add similar code for other roles
+        
     }
 }
